@@ -1,0 +1,66 @@
+#!/bin/sh
+
+COMMAND=$1
+
+# section formatter
+# Helper functions
+function topic() {
+  echo "-----> $*"
+}
+
+# output formatter
+function indent() {
+  c='s/^/       /'
+  case $(uname) in
+    Darwin) sed -l "$c";;
+    *)      sed -u "$c";;
+  esac
+}
+
+# detect the linux distribution
+which_path() {
+  topic "Looking for $COMMAND on \$PATH:"
+  if which $COMMAND 1> /dev/null 2>&1; then
+    echo "$COMMAND is installed at $(which $COMMAND)" | indent
+    return 0
+  else
+    echo "$COMMAND not found" | indent
+    return 1
+  fi
+}
+
+which_version() {
+  echo ""
+  topic "Version:"
+  if $COMMAND --version 1> /dev/null 2>&1; then
+    $COMMAND --version | indent
+    return 0
+  elif which $COMMAND -v 1> /dev/null 2>&1; then
+    $COMMAND -v | indent
+    return 0
+  elif which $COMMAND version 1> /dev/null 2>&1; then
+    $COMMAND version | indent
+    return 0
+  else
+    echo "unknown" | indent
+    return 1
+  fi
+}
+
+which_lsof() {
+  if which lsof 1> /dev/null 2>&1; then
+    if lsof $(which $COMMAND) 1> /dev/null 2>&1; then
+      echo ""
+      topic "Accessors:"
+      lsof $(which $COMMAND) | indent
+      return 0
+    fi
+  else
+    return 1
+  fi
+}
+
+if which_path; then
+  which_version
+  which_lsof
+fi
