@@ -20,47 +20,61 @@ function indent() {
 # detect the linux distribution
 which_path() {
   topic "Looking for $COMMAND on \$PATH:"
-  if which $COMMAND 1> /dev/null 2>&1; then
+  if which $COMMAND > /dev/null 2>&1; then
     echo "$COMMAND is installed at $(which $COMMAND)" | indent
     return 0
   else
     echo "$COMMAND not found" | indent
     return 1
-  fi
+  fi;
 }
 
 which_version() {
   echo ""
   topic "Version:"
-  if $COMMAND --version 1> /dev/null 2>&1; then
-    $COMMAND --version | indent
+  if $COMMAND --version > /dev/null 2>&1; then
+    $COMMAND --version 2>&1 | indent
     return 0
-  elif which $COMMAND -v 1> /dev/null 2>&1; then
-    $COMMAND -v | indent
+  elif $COMMAND -v > /dev/null 2>&1; then
+    $COMMAND -v 2>&1 | indent
     return 0
-  elif which $COMMAND version 1> /dev/null 2>&1; then
-    $COMMAND version | indent
+  elif $COMMAND version > /dev/null 2>&1; then
+    $COMMAND version 2>&1 | indent
     return 0
   else
     echo "unknown" | indent
     return 1
-  fi
+  fi;
 }
 
 which_lsof() {
-  if which lsof 1> /dev/null 2>&1; then
-    if lsof $(which $COMMAND) 1> /dev/null 2>&1; then
+  if which lsof > /dev/null 2>&1; then
+    if lsof $(which $COMMAND) > /dev/null 2>&1; then
       echo ""
-      topic "Accessors:"
+      topic "Instances:"
       lsof $(which $COMMAND) | indent
       return 0
     fi
   else
-    return 1
+    return 0
+  fi
+}
+
+which_netstat() {
+  if which netstat > /dev/null 2>&1; then
+    if netstat -ltnp | grep $COMMAND > /dev/null 2>&1; then
+      echo ""
+      topic "Open ports:"
+      netstat -ltnp | grep $COMMAND | indent
+      return 0
+    fi
+  else
+    return 0
   fi
 }
 
 if which_path; then
   which_version
   which_lsof
+  which_netstat
 fi
