@@ -1,9 +1,24 @@
 #!/bin/sh
 
+PROGRAM="check_pm"
+REQUIRED_ARGS=1
+PROVIDED_ARGS=$#
 COMMAND=$1
+PKG_MGR=0
+
+check_args() {
+  if [ "$REQUIRED_ARGS" != "$PROVIDED_ARGS" ];
+  then
+    echo "\nERROR: incorrect number of arguments.\n"
+    echo "\nPlease provide exactly one argument:"
+    echo ""
+    echo "$PROGRAM command_name"
+    exit 1
+  fi
+  return 0
+}
 
 # section formatter
-# Helper functions
 function topic() {
   echo "-----> $*"
 }
@@ -73,6 +88,7 @@ which_netstat() {
   fi
 }
 
+check_args
 if which_path; then
   which_version
   which_lsof

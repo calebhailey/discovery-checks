@@ -1,0 +1,76 @@
+#!/bin/sh
+
+PROGRAM="check_pm"
+REQUIRED_ARGS=1
+PROVIDED_ARGS=$#
+COMMAND=$1
+PKG_MGR=0
+
+check_args() {
+  if [ "$REQUIRED_ARGS" != "$PROVIDED_ARGS" ];
+  then
+    echo "\nERROR: incorrect number of arguments.\n"
+    echo "\nPlease provide exactly one argument:"
+    echo ""
+    echo "$PROGRAM command_name"
+    exit 1
+  fi
+  return 0
+}
+
+# section formatter
+function topic() {
+  echo "-----> $*"
+}
+
+# output formatter
+function indent() {
+  c='s/^/       /'
+  case $(uname) in
+    Darwin) sed -l "$c";;
+    *)      sed -u "$c";;
+  esac
+}
+
+# detect package manager
+function detect_package_manager() {
+  if which yum > /dev/null 2>&1; then
+    PKG_MGR="yum"
+    break
+  elif which apt > /dev/null 2&1; then
+    PKG_MGR="apt"
+    break
+  else
+    PKG_MGR="unknown"
+    break
+  fi
+}
+
+# check installed packages
+function check_installed_packages() {
+  topic "Installed Packages:"
+  case $PKG_MGR in
+  yum)
+    if yum list installed | grep $COMMAND > /dev/null 2>&1; then
+      yum list installed | grep $COMMAND | indent
+      break
+    else
+      echo "not found" | indent
+      break
+    fi
+    ;;
+  apt)
+    if apt list --installed | grep $COMMAND > /dev/null 2>&1; then
+      apt list --installed | grep $COMMAND | indent
+      break
+    fi
+    ;;
+  *)
+    echo "package manager unknown ($PKG_MGR)"
+    ;;
+  esac
+  exit 0
+}
+
+detect_package_manager
+check_installed_packages
